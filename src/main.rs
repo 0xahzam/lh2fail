@@ -8,15 +8,24 @@
 // - bending
 // - shear stresses caused by weight of fuel
 
+use clap::Parser;
 use rand_distr::{Distribution, Normal};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
+
+#[derive(Parser)]
+#[command(about = "Simulate failure probability of LH2 tank", author, version)]
+struct Args {
+    // Number of iterations to run (default: 1_000_000)
+    #[arg(short, long, default_value_t = 1_000_00)]
+    iterations: u32,
+}
 
 struct HydrogenTank {
     t_plate: f32, // Plate thickness
     t_h: f32,     // Honeycomb thickness
-    n_x: f32,     // Load on tank, x-component
-    n_y: f32,     // Load on tank, y-component
-    n_xy: f32,    // Load on tank, xy-component
+    n_x: f32,     // Load on tank, x component
+    n_y: f32,     // Load on tank, y component
+    n_xy: f32,    // Load on tank, xy component
 }
 
 impl HydrogenTank {
@@ -68,7 +77,9 @@ impl HydrogenTank {
 }
 
 fn main() {
-    // let mut rng = rng();
+    let args = Args::parse();
+    let iterations = args.iterations;
+
     let start = std::time::Instant::now();
 
     // Sampling variables from their distributions
@@ -77,8 +88,6 @@ fn main() {
     let dist_nx = Normal::new(13.0, 60.0).unwrap();
     let dist_ny = Normal::new(4751.0, 48.0).unwrap();
     let dist_nxy = Normal::new(-648.0, 11.0).unwrap();
-
-    let iterations = 100_000_000;
 
     // Parallel simulation
     let (total_failures, pvm_failures, pis_failures, phb_failures) = (0..iterations)
